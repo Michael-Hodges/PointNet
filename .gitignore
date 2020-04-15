@@ -1,2 +1,4 @@
 __pycache__/
 Pointnet.pdf
+ShapeNet/
+.DS_Store
