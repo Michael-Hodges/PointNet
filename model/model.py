@@ -52,7 +52,7 @@ class Vanilla_Classify_Net(nn.Module):
 		print("view {}".format(x.shape))
 		x = F.relu(self.bn5(self.fc1(x)))
 		x = F.relu(self.bn6(self.fc2(x)))
-		x = self.fc3
+		x = F.softmax(self.fc3(x), dim=1)
 
 class Classify_Net(nn.Module):
 	def __init__(self, output_dim):
