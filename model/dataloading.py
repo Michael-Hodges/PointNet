@@ -5,12 +5,36 @@ import torch.utils.data as data
 import numpy as np
 
 
+# data folder should be set up as follows:
+# root path named by user (default ShapeNet)
+# subfolders class_labels.txt converts folder numbers to class labels
+# subfolders cont. test_data/ train_data/ val_data/ train_label/ val_label/
+# Airplane        02691156
+# Bag             02773838
+# Cap             02954340
+# Car             02958343
+# Chair           03001627
+# Earphone        03261776
+# Guitar          03467517
+# Knife           03624134
+# Lamp            03636649
+# Laptop          03642806
+# Motorbike       03790512
+# Mug             03797390
+# Pistol          03948459
+# Rocket          04099429
+# Skateboard      04225987
+# Table           04379243
+
 class ShapeNetClassify(data.Dataset):
-	def __init__(self, path):
+	def __init__(self, path, train_val_test):
 		self.path = path  # path to data folder of shapenet
 		self.classes = {} # dict of the form {class_number, class_name}
 		self.classfile = os.path.join(self.path, 'class_labels.txt')  # create path to file that contains class numbners and labels
-		self.pointfiles = os.path.join(self.path, 'train_data/')#, ''.format(i)) for i in os.path.join(self.path, train_data))]
+		if train_val_test == 'train':
+			self.pointfiles = os.path.join(self.path, 'train_data')#, ''.format(i)) for i in os.path.join(self.path, train_data))]
+		if train_val_test == 'val':
+			self.pointfiles = os.path.join(self.path, 'val_data')
 		# Fill dict self.classes with {class_number, class_name}
 		self.source = []
 		self.label = {}
@@ -19,9 +43,11 @@ class ShapeNetClassify(data.Dataset):
 				line = line.strip().split()
 				self.classes[line[1]] = line[0]
 				self.label[line[0]] = i
-		print(self.label)
-		# print(self.classes)
-		
+		# print(self.label)
+		#{'Airplane': 0, 'Bag': 1, 'Cap': 2, 'Car': 3, 'Chair': 4, 'Earphone': 5, 'Guitar': 6, 'Knife': 7, 'Lamp': 8, 'Laptop': 9, 'Motorbike': 10, 'Mug': 11, 'Pistol': 12, 'Rocket': 13, 'Skateboard': 14, 'Table': 15}
+		# print(self.classes
+		# {'02691156': 'Airplane', '02773838': 'Bag', '02954340': 'Cap', '02958343': 'Car', '03001627': 'Chair', '03261776': 'Earphone', '03467517': 'Guitar', '03624134': 'Knife', '03636649': 'Lamp', '03642806': 'Laptop', '03790512': 'Motorbike', '03797390': 'Mug', '03948459': 'Pistol', '04099429': 'Rocket', '04225987': 'Skateboard', '04379243': 'Table'}
+
 		# data comes in as shapenet/numbers/collection.pts
 		# we need to load data from each folder and label each point per folder
 		self.points = [os.path.join(self.pointfiles, x) for x in self.classes] # self.points has each class folder path
@@ -46,7 +72,7 @@ class ShapeNetClassify(data.Dataset):
 
 
 if __name__ == '__main__':
-	classify_net = ShapeNetClassify('ShapeNet')
+	classify_net = ShapeNetClassify('ShapeNet', 'train')
 	points, item_class = classify_net.__getitem__(50)
 	class_len = classify_net.__len__()
 
