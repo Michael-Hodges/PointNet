@@ -44,7 +44,10 @@ def train(data_path, act):
 			total_correct = 0
 			total_samples = 0
 			for step, (inputs, labels) in enumerate(train_loader):
+				print("dataloader_inputs: {}".format(inputs.shape))
 				classifier.train()
+				inputs = inputs.permute(0,2,1)
+				print("labels: {}".format(labels.shape))
 				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 				optimizer.zero_grad()
 
@@ -63,14 +66,14 @@ def train(data_path, act):
 			val_total = 0
 			val_running_loss = 0
 			with torch.no_grad():
-				for _, (inputs, labels) in enumerate(val_loader)
-				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
-				outputs = classifier(inputs)
-				val_loss = loss(outputs, labels)
-				val_running_loss += val_loss.item()/labels.size(0)
-				_, predicted = torch.max(outputs.data, 1)
-				val_total += labels.size(0)
-				val_correct += (predicted == labels).sum().item()
+				for _, (inputs, labels) in enumerate(val_loader):
+					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+					outputs = classifier(inputs)
+					val_loss = loss(outputs, labels)
+					val_running_loss += val_loss.item()/labels.size(0)
+					_, predicted = torch.max(outputs.data, 1)
+					val_total += labels.size(0)
+					val_correct += (predicted == labels).sum().item()
 			val_accuracy = 100 * val_correct / val_total
 			epoch_delta = val_accuracy - prev_val_accuracy
 			prev_val_accuracy = val_accuracy
