@@ -62,7 +62,7 @@ def train(data_path, act):
 				total_samples += labels.size(0)
 				# print("Total Samples: {}".format(total_samples))
 				total_correct += (predicted == labels).sum().item()
-			train_accuracy = 100 * total_correct / total
+			train_accuracy = 100 * total_correct / total_samples
 
 			val_accuracy = 0
 			val_correct = 0
@@ -71,6 +71,7 @@ def train(data_path, act):
 			with torch.no_grad():
 				for _, (inputs, labels) in enumerate(val_loader):
 					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+					inputs = inputs.permute(0,2,1)
 					outputs = classifier(inputs)
 					val_loss = loss(outputs, labels)
 					val_running_loss += val_loss.item()/labels.size(0)
