@@ -64,8 +64,9 @@ class ShapeNetClassify(data.Dataset):
 		pts = pts[points_sel,:]
 		pts = torch.from_numpy(pts)
 		item_class = torch.from_numpy(np.array([self.label[self.classes[cat]]]))
+		# print("from data_loader: {}".format(item_class.item()))
 		# TODO: center all points and and normalize
-		return pts, item_class # returns set of points and class num [0-15]
+		return pts, item_class.item() # returns set of points and class num [0-15]
 
 	def __len__(self):
 		return len(self.data_paths)

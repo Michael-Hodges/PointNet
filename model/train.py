@@ -44,20 +44,22 @@ def train(data_path, act):
 			total_correct = 0
 			total_samples = 0
 			for step, (inputs, labels) in enumerate(train_loader):
-				print("dataloader_inputs: {}".format(inputs.shape))
 				classifier.train()
 				inputs = inputs.permute(0,2,1)
-				print("labels: {}".format(labels.shape))
+				# print("Input Shape: {}".format(inputs.shape))
+				# print("labels: {}".format(labels.shape))
 				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 				optimizer.zero_grad()
 
 				outputs = classifier(inputs)
+				# print("Output Shape: {}".format(outputs.shape))
 				loss = loss_func(outputs, labels)
 				loss.backward()
 				optimizer.step()
 				running_loss += loss.item()/labels.size(0)
 				_, predicted = torch.max(outputs.data, 1)
-				total_samples += labels.size()
+				total_samples += labels.size(0)
+				# print("Total Samples: {}".format(total_samples))
 				total_correct += (predicted == labels).sum().item()
 			train_accuracy = 100 * total_correct / total
 

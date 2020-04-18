@@ -7,7 +7,7 @@ from torch.autograd import Variable
 class Vanilla_Classify_Net(nn.Module):
 	def __init__(self, output_dim):
 		super(Vanilla_Classify_Net, self).__init__()
-		print("Vanilla init not yet implemented")
+		# print("Vanilla init not yet implemented")
 		# Input Transform
 		self.conv1d_1 = nn.Conv1d(3,64,1)
 		self.conv1d_2 = nn.Conv1d(64,64,1)
@@ -32,28 +32,34 @@ class Vanilla_Classify_Net(nn.Module):
 		# self.fc6 = nn.Linear(PLACEHOLDER, 512, bias=False
 	
 	def forward(self, x):
-		# Define Forward pass input is nx3
-		print("input {}".format(x.shape)) 
+		# Define Forward pass
+		# print("input {}".format(x.shape)) 
 		# input [batch_size, input_dim, points]
 		x = F.relu(self.bn1(self.conv1d_1(x))) #nx64
-		# size [batch_size, 64, points]
-		print("conv1 {}".format(x.shape))
+		# Conv1 size [batch_size, 64, points]
+		# print("conv1 {}".format(x.shape))
 		x = F.relu(self.bn2(self.conv1d_2(x)))
-		print("conv2 {}".format(x.shape))
+		# Conv2 size [batch_size, 64,points]
+		# print("conv2 {}".format(x.shape))
 		x = F.relu(self.bn3(self.conv1d_3(x)))
-		print("conv3 {}".format(x.shape))
+		# Conv3 size [batch_size, 128,points]
+		# print("conv3 {}".format(x.shape))
 		x = F.relu(self.bn4(self.conv1d_4(x)))
-		print("conv4 {}".format(x.shape))
+		# Conv4 size [batch_size, 1024,points]
+		# print("conv4 {}".format(x.shape))
 		# Perform max pooling
 
 		x, _ = torch.max(x, 2, keepdim=True)
-		print("max {}".format(x.shape))
+		# max size = [batch_size, 1024, 1]
+		# print("max {}".format(x.shape))
 		x = x.view(-1, 1024)
-		print("view {}".format(x.shape))
+		# view size = [batch_size, 1024]
+		# print("view {}".format(x.shape))
 		x = F.relu(self.bn5(self.fc1(x)))
 		x = F.relu(self.bn6(self.fc2(x)))
 		x = F.softmax(self.fc3(x), dim=1)
-		print("softamx: {}".format(x.shape)) #[batch_size, output_dim]
+		#output size = [batch_size, output_dim]
+		# print("softamx: {}".format(x.shape)) 
 		return x
 
 class Classify_Net(nn.Module):
