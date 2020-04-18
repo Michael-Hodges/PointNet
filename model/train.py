@@ -19,6 +19,7 @@ def train(data_path, act):
 
 	if act=="classify":
 		classifier = model.Vanilla_Classify_Net(output_dim=16)
+		classifier.to(DEVICE)
 		train_data = dataloading.ShapeNetClassify(data_path, 'train')
 		train_loader = data.DataLoader(dataset=train_data, batch_size=64, shuffle=True,
 			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
@@ -44,22 +45,24 @@ def train(data_path, act):
 			total_correct = 0
 			total_samples = 0
 			for step, (inputs, labels) in enumerate(train_loader):
-				print("dataloader_inputs: {}".format(inputs.shape))
 				classifier.train()
 				inputs = inputs.permute(0,2,1)
-				print("labels: {}".format(labels.shape))
+				# print("Input Shape: {}".format(inputs.shape))
+				# print("labels: {}".format(labels.shape))
 				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 				optimizer.zero_grad()
 
 				outputs = classifier(inputs)
+				# print("Output Shape: {}".format(outputs.shape))
 				loss = loss_func(outputs, labels)
 				loss.backward()
 				optimizer.step()
 				running_loss += loss.item()/labels.size(0)
 				_, predicted = torch.max(outputs.data, 1)
-				total_samples += labels.size()
+				total_samples += labels.size(0)
+				# print("Total Samples: {}".format(total_samples))
 				total_correct += (predicted == labels).sum().item()
-			train_accuracy = 100 * total_correct / total
+			train_accuracy = 100 * total_correct / total_samples
 
 			val_accuracy = 0
 			val_correct = 0
@@ -67,9 +70,11 @@ def train(data_path, act):
 			val_running_loss = 0
 			with torch.no_grad():
 				for _, (inputs, labels) in enumerate(val_loader):
+					classifier.eval()
+					inputs = inputs.permute(0,2,1)
 					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 					outputs = classifier(inputs)
-					val_loss = loss(outputs, labels)
+					val_loss = loss_func(outputs, labels)
 					val_running_loss += val_loss.item()/labels.size(0)
 					_, predicted = torch.max(outputs.data, 1)
 					val_total += labels.size(0)
@@ -81,7 +86,7 @@ def train(data_path, act):
 			print('{0:5d}, {1:10.3f}, {2:11.3f}, {3:9.3f}, {4:10.3f}'.format(epoch, running_loss, train_accuracy, val_running_loss, val_accuracy))
 
 		print("Training terminated. Saving model...")
-		torch.save(net.state_dict(), "./model/pn_classify.pt")
+		torch.save(classifier.state_dict(), "./model/pn_classify.pt")
 
 if __name__== '__main__':
 	parser = argparse.ArgumentParser()
