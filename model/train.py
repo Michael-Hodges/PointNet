@@ -18,7 +18,8 @@ EPOCHS = 10
 def train(data_path, act):
 
 	if act=="classify":
-		classifier = model.Vanilla_Classify_Net(output_dim=16).to(DEVICE)
+		classifier = model.Vanilla_Classify_Net(output_dim=16)
+		classifier.to(DEVICE)
 		train_data = dataloading.ShapeNetClassify(data_path, 'train')
 		train_loader = data.DataLoader(dataset=train_data, batch_size=64, shuffle=True,
 			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
