@@ -70,10 +70,11 @@ def train(data_path, act):
 			val_running_loss = 0
 			with torch.no_grad():
 				for _, (inputs, labels) in enumerate(val_loader):
-					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+					classifier.eval()
 					inputs = inputs.permute(0,2,1)
+					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 					outputs = classifier(inputs)
-					val_loss = loss(outputs, labels)
+					val_loss = loss_func(outputs, labels)
 					val_running_loss += val_loss.item()/labels.size(0)
 					_, predicted = torch.max(outputs.data, 1)
 					val_total += labels.size(0)
