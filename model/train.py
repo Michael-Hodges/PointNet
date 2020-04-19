@@ -86,7 +86,7 @@ def train(data_path, act):
 			print('{0:5d}, {1:10.3f}, {2:11.3f}, {3:9.3f}, {4:10.3f}'.format(epoch, running_loss, train_accuracy, val_running_loss, val_accuracy))
 
 		print("Training terminated. Saving model...")
-		torch.save(classifier.state_dict(), "./model/pn_classify.pt")
+		torch.save(classifier.state_dict(), "./pn_classify.pt")
 
 if __name__== '__main__':
 	parser = argparse.ArgumentParser()
