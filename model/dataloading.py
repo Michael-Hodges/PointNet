@@ -36,7 +36,7 @@ class ShapeNetClassify(data.Dataset):
 		if train_val_test == 'val':
 			self.pointfiles = os.path.join(self.path, 'val_data')
 		if train_val_test == 'test':
-			self.pointfiles = os.path.join(self.path, 'test_data')
+			self.pointfiles = os.path.join(self.path, 'test_data'cd )
 		# Fill dict self.classes with {class_number, class_name}
 		self.source = []
 		self.label = {}
