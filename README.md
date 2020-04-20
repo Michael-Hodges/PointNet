@@ -4,19 +4,23 @@ Requirements are as follows:
 - Torch
 - numpy
 - pptk
+
 **Install requirements as follows:**
 ```
 pip install -r requirements.txt
 ```
 
 **Download dataset as follows:**
+
 For linux using wget (adjust using curl for mac)
 ```
 bash download.sh
 ```
 
 **Create file in ShapeNet dataset**
+
 Name file class_labels.txt
+
 Paste the following text into it:
 ```
 Airplane        02691156
@@ -39,17 +43,17 @@ Table           04379243
 
 ## Running the code
 ### Training:
-No arguments required but shown for completion
+No arguments required, but shown for completion
 ```
 python model/train.py --dataset <DATASET> --action <CLASSIFY> --path <DATASET_PATH>
 ```
 ### Testing:
-No arguments required but shown for completion
+No arguments required, but shown for completion
 ```
 python model/test.py --dataset <DATASET> --action <CLASSIFY> --path <DATASET_PATH> --model <MODEL_TYPE> --load <LOAD_PATH>
 ```
 ### Visualize and single item classification:
-No arguments required but shown for completion
+No arguments required, but shown for completion
 ```
 python model/classify.py --path <DATA_POINT_PATH> --model <MODEL_TYPE> --load <LOAD_PATH>
 ```
