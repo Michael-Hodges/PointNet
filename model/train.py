@@ -86,12 +86,84 @@ def train(data_path, act):
 			print('{0:5d}, {1:10.3f}, {2:11.3f}, {3:9.3f}, {4:10.3f}'.format(epoch, running_loss, train_accuracy, val_running_loss, val_accuracy))
 
 		print("Training terminated. Saving model...")
-		torch.save(classifier.state_dict(), "./pn_classify.pt")
+		torch.save(classifier.state_dict(), "./model/pn_classify.pt")
+
+	if act=="segment":
+		classifier = model.Vanilla_Segment_Net(output_dim=6)
+		classifier.to(DEVICE)
+		train_data = dataloading.ShapeNetSegment(data_path, 'train')
+		train_loader = data.DataLoader(dataset=train_data, batch_size=64, shuffle=True,
+			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
+			pin_memory=True, drop_last=True, timeout=0,
+			worker_init_fn=None)
+
+		val_data = dataloading.ShapeNetClassify(data_path, 'val')
+		val_loader = data.DataLoader(dataset=val_data, batch_size=64, shuffle=True,
+			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
+			pin_memory=True, drop_last=True, timeout=0,
+			worker_init_fn=None)
+
+		loss_func = nn.CrossEntropyLoss()
+		optimizer = optim.Adam(classifier.parameters(), lr=0.001, weight_decay=0.0)
+		print('{0}, {1}, {2}, {3}, {4}'.format('Epoch', 'Train Loss', 'Train Acc %', 'Test Loss', 'Test Acc %'))
+		epoch = 0
+		prev_val_accuracy = 0
+		val_accuracy = 0
+		epoch_delta = -999
+		while (np.abs(epoch_delta)>0.1) and (epoch < EPOCHS):
+			running_loss = 0.0
+			train_accuracy = 0.0
+			total_correct = 0
+			total_samples = 0
+			for step, (inputs, labels) in enumerate(train_loader):
+				classifier.train()
+				inputs = inputs.permute(0,2,1)
+				# print("Input Shape: {}".format(inputs.shape))
+				# print("labels: {}".format(labels.shape))
+				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+				optimizer.zero_grad()
+
+				outputs = classifier(inputs)
+				# print("Output Shape: {}".format(outputs.shape))
+				loss = loss_func(outputs, labels)
+				loss.backward()
+				optimizer.step()
+				running_loss += loss.item()/labels.size(0)
+				_, predicted = torch.max(outputs.data, 1)
+				total_samples += labels.size(0)
+				# print("Total Samples: {}".format(total_samples))
+				total_correct += (predicted == labels).sum().item()
+			train_accuracy = 100 * total_correct / total_samples
+
+			val_accuracy = 0
+			val_correct = 0
+			val_total = 0
+			val_running_loss = 0
+			with torch.no_grad():
+				for _, (inputs, labels) in enumerate(val_loader):
+					classifier.eval()
+					inputs = inputs.permute(0,2,1)
+					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+					outputs = classifier(inputs)
+					val_loss = loss_func(outputs, labels)
+					val_running_loss += val_loss.item()/labels.size(0)
+					_, predicted = torch.max(outputs.data, 1)
+					val_total += labels.size(0)
+					val_correct += (predicted == labels).sum().item()
+			val_accuracy = 100 * val_correct / val_total
+			epoch_delta = val_accuracy - prev_val_accuracy
+			prev_val_accuracy = val_accuracy
+			epoch += 1
+			print('{0:5d}, {1:10.3f}, {2:11.3f}, {3:9.3f}, {4:10.3f}'.format(epoch, running_loss, train_accuracy, val_running_loss, val_accuracy))
+
+		print("Training terminated. Saving model...")
+		torch.save(classifier.state_dict(), "./model/pn_Segment.pt")
+
 
 if __name__== '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dataset', default='shapenet', type=str)
-	parser.add_argument('--action', default='classify', type=str)
+	parser.add_argument('--action', default='classify', type=str) #option classify | segment
 	parser.add_argument('--path', default='ShapeNet', type=str)
 
 	args = parser.parse_args()

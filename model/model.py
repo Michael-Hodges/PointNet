@@ -77,10 +77,65 @@ class Classify_Net(nn.Module):
 class Vanilla_Segment_Net(nn.Module):
 	def __init__(self, output_dim):
 		super(Vanilla_Segment_Net, self).__init__()
-		print("Vanilla segment init not yet implemented")
+		# print("Vanilla segment init not yet Finalized")
+		# TODO: ALL OF THIS IS COPIED FROM VANILLA_NET. CAN REUSE
+		self.conv1d_1 = nn.Conv1d(3,64,1)
+		self.conv1d_2 = nn.Conv1d(64,64,1)
+		#Feature Transform and split to segmentation
+		self.conv1d_3 = nn.Conv1d(64, 128, 1)
+		self.conv1d_4 = nn.Conv1d(128, 1024, 1)
+		# Max Pool
+
+		self.bn1 = nn.BatchNorm1d(64)
+		self.bn2 = nn.BatchNorm1d(64)
+		self.bn3 = nn.BatchNorm1d(128)
+		self.bn4 = nn.BatchNorm1d(1024)
+		## END VANILLA_NET
+		##START SEGMENTATION NETWORK
+		self.seg_conv1 = nn.Conv1d(1088, 512, 1)
+		self.seg_conv2 = nn.Conv1d(512, 256, 1)
+		self.seg_conv3 = nn.Conv1d(256, 128, 1)
+		self.seg_conv4 = nn.Conv1d(128, output_dim, 1)
+
+		self.seg_bn1 = nn.BatchNorm1d(512)
+		self.seg_bn2 = nn.BatchNorm1d(256)
+		self.seg_bn3 = nn.BatchNorm1d(128)
 
 	def forward(self, x):
-		Print("Vanilla segment forward not yet implemented")
+		# Define Forward pass
+		batch_size = x.shape[0]
+		num_points = x.shape[2]
+		# input [batch_size, input_dim, points]
+		x = F.relu(self.bn1(self.conv1d_1(x))) #nx64
+		# Conv1 size [batch_size, 64, points]	
+		input_feats = F.relu(self.bn2(self.conv1d_2(x)))
+		# Conv2 size [batch_size, 64,points]
+		x = F.relu(self.bn3(self.conv1d_3(input_feats)))
+		# Conv3 size [batch_size, 128,points]
+		x = F.relu(self.bn4(self.conv1d_4(x)))
+		# Conv4 size [batch_size, 1024,points]
+		# Perform max pooling
+		x, _ = torch.max(x, 2, keepdim=True)
+		# max size = [batch_size, 1024, 1]
+
+		glob_feat = x.view(batch_size, 1024, 1)
+		glob_feat = glob_feat.repeat(1,1, num_points)
+		# glob_feat = [batch_size, 1024, 2000]
+
+		#Begin Segmentation network
+		# input feats [n, 64, points] glob feats, [batch_size, 1024, ?]
+		segment_input = torch.cat((input_feats, glob_feat), dim = 1)
+		# segment input [n, 1088, points]
+		x = F.relu(self.seg_bn1(self.seg_conv1(segment_input)))
+		# seg_conv1 [n, 512, points]
+		x = F.relu(self.seg_bn2(self.seg_conv2(x)))
+		# seg_conv2 [n, 256, points]
+		x = F.relu(self.seg_bn3(self.seg_conv3(x)))
+		# seg_conv3 [n, 128, points]
+		x = F.softmax(self.seg_conv4(x), dim = 1)
+		
+		#seg_conv4/output [nxm]
+		return x
 
 class Segment_Net(nn.Module):
 	def __init__(self, output_dim):
@@ -88,10 +143,15 @@ class Segment_Net(nn.Module):
 		print("Segment init not yet implemented")
 
 	def forward(self, x):
-		Print("Segment forward not yet implemented")
+		print("Segment forward not yet implemented")
 
 if __name__ == '__main__':
-	test_model = Vanilla_Classify_Net(16)
-	test_data = Variable(torch.rand(32,3,2000))
-	output = test_model(test_data)
+	# test_model = Vanilla_Classify_Net(16)
+	# test_data = Variable(torch.rand(32,3,2000))
+	# output = test_model(test_data)
+
+
+	test_model2 = Vanilla_Segment_Net(16)
+	test_data2 = Variable(torch.rand(32,3,2000))
+	output2 = test_model2(test_data2)
 	
