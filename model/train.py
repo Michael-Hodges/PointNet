@@ -97,7 +97,7 @@ def train(data_path, act):
 			pin_memory=True, drop_last=True, timeout=0,
 			worker_init_fn=None)
 
-		val_data = dataloading.ShapeNetClassify(data_path, 'val')
+		val_data = dataloading.ShapeNetSegment(data_path, 'val')
 		val_loader = data.DataLoader(dataset=val_data, batch_size=64, shuffle=True,
 			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
 			pin_memory=True, drop_last=True, timeout=0,
