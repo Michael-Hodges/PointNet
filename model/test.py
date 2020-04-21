@@ -73,6 +73,39 @@ def test(model, path, act, dataset):
 		print("-------------------------")
 		print("Total Accuracy: {0:2.2f}".format(100*np.sum(running_total_correct/np.sum(running_total))))
 
+	if act == 'segment':
+		if dataset == 'shapenet':
+			test_data = dataloading.ShapeNetSegment(path, 'val')
+		
+		test_loader = data.DataLoader(dataset=test_data, batch_size=16, shuffle=True,
+			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
+			pin_memory=True, drop_last=False, timeout=0,
+			worker_init_fn=None)
+		loss_func = nn.CrossEntropyLoss()
+		running_total_correct = np.zeros(16)
+		running_total = np.zeros(16)
+
+		with torch.no_grad():
+			for _, (inputs, labels) in enumerate(test_loader):
+				classifier.eval()
+				inputs = inputs.permute(0,2,1)
+				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+				outputs = classifier(inputs)
+				_, predicted = torch.max(outputs.data, 1)
+				correct = (predicted == labels).squeeze()
+				for i in range(len(labels)):
+					label = labels[i]
+					running_total_correct[label] += correct[i]
+					running_total[label] += 1
+
+		class_dict = load_class_dict(path)		
+		print("Per Class Accuracy:")
+		print("-------------------------")
+		for i, (correct, samples) in enumerate(zip(running_total_correct, running_total)):
+			print("{0:>10}: {1:2.2f}".format(class_dict[i], 100*correct/samples))
+		print("-------------------------")
+		print("Total Accuracy: {0:2.2f}".format(100*np.sum(running_total_correct/np.sum(running_total))))
+
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
