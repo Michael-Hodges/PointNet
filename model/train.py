@@ -146,15 +146,18 @@ def train(data_path, act):
 			val_total = 0
 			val_running_loss = 0
 			with torch.no_grad():
-				for _, (inputs, labels) in enumerate(val_loader):
+				for _, (inputs, labels, _) in enumerate(val_loader):
+					batch_size = labels.size(0)
+					point_num = labels.size(1)
 					classifier.eval()
 					inputs = inputs.permute(0,2,1)
 					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 					outputs = classifier(inputs)
 					val_loss = loss_func(outputs, labels)
-					val_running_loss += val_loss.item()/labels.size(0)
+					t_samps = labels.view(batch_size*point_num, -1).squeeze()
+					val_running_loss += val_loss.item()/t_samps
 					_, predicted = torch.max(outputs.data, 1)
-					val_total += labels.size(0)
+					val_total += t_samps
 					val_correct += (predicted == labels).sum().item()
 			val_accuracy = 100 * val_correct / val_total
 			epoch_delta = val_accuracy - prev_val_accuracy
