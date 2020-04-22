@@ -43,6 +43,7 @@ def counter(path):
 # Table           04379243    848
 def test(model, path, act, dataset):
 	classifier = model
+	classifier.to(DEVICE)
 	if act == 'classify':
 		if dataset == 'shapenet':
 			test_data = dataloading.ShapeNetClassify(path, 'test')
@@ -58,7 +59,7 @@ def test(model, path, act, dataset):
 		with torch.no_grad():
 			for _, (inputs, labels) in enumerate(test_loader):
 				classifier.eval()
-				inputs = inputs.permute(0,2,1)
+				# inputs = inputs.permute(0,2,1)
 				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 				outputs = classifier(inputs)
 				_, predicted = torch.max(outputs.data, 1)

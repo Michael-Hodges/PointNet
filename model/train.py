@@ -175,7 +175,7 @@ if __name__== '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dataset', default='shapenet', type=str)
 	parser.add_argument('--action', default='classify', type=str) #option classify | segment
-	parser.add_argument('--path', default='ShapeNet', type=str)
+	parser.add_argument('--path', default='../ShapeNet', type=str)
 
 	args = parser.parse_args()
 
