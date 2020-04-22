@@ -115,7 +115,9 @@ def train(data_path, act):
 			train_accuracy = 0.0
 			total_correct = 0
 			total_samples = 0
-			for step, (inputs, labels) in enumerate(train_loader):
+			for step, (inputs, labels, _) in enumerate(train_loader):
+				batch_size = labels.size(0)
+				point_num = labels.size(1)
 				classifier.train()
 				inputs = inputs.permute(0,2,1)
 				# print("Input Shape: {}".format(inputs.shape))
@@ -128,9 +130,13 @@ def train(data_path, act):
 				loss = loss_func(outputs, labels)
 				loss.backward()
 				optimizer.step()
-				running_loss += loss.item()/labels.size(0)
+				t_samps = labels.view(batch_size*point_num, -1).squeeze()
+				# print("tsamps: {}".format(t_samps.shape))
+				running_loss += loss.item()/t_samps
 				_, predicted = torch.max(outputs.data, 1)
-				total_samples += labels.size(0)
+				# print(labels.shape)
+				# print("labels.size(0): {}".format(labels.size(0)))
+				total_samples += t_samps
 				# print("Total Samples: {}".format(total_samples))
 				total_correct += (predicted == labels).sum().item()
 			train_accuracy = 100 * total_correct / total_samples

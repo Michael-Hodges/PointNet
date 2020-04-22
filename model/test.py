@@ -16,6 +16,9 @@ def load_model(model_type, model_path):
 	if model_type == 'Vanilla_Classify_Net':
 		classifier = model.Vanilla_Classify_Net(output_dim=16)
 		classifier.load_state_dict(torch.load(model_path, map_location=torch.device(DEVICE)))
+	if model_type == 'Vanilla_Segment_Net':
+		classifier = model.Vanilla_Segment_Net(output_dim=6)
+		classifier.load_state_dict(torch.load(model_path, map_location=torch.device(DEVICE)))
 	return classifier
 
 def counter(path):
@@ -86,20 +89,34 @@ def test(model, path, act, dataset):
 		running_total = np.zeros(16)
 
 		with torch.no_grad():
-			for _, (inputs, labels) in enumerate(test_loader):
+			for _, (inputs, labels, c_label) in enumerate(test_loader):
+				# print(inputs.shape)
+				# print(labels.shape)
+				# print(c_label)
 				classifier.eval()
 				inputs = inputs.permute(0,2,1)
 				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 				outputs = classifier(inputs)
 				_, predicted = torch.max(outputs.data, 1)
+				# print("Predicted shape: {}".format(predicted.shape))
+				# print("Ground Truth shape: {}".format(labels.shape))
 				correct = (predicted == labels).squeeze()
-				for i in range(len(labels)):
-					label = labels[i]
-					running_total_correct[label] += correct[i]
-					running_total[label] += 1
+				correct = correct.data.numpy()
+				# print(correct.shape)
+				# running_total_correct = 0
+				# running_total = 0
+				for i in range(len(c_label)):
+					label = c_label[i]
+					# print("class: {}".format(label))
+					# print("correct: {}".format(correct[i,:]))
+					running_total_correct[label] += correct[i,:].sum()
+					# print("Total Correct: {}".format(running_total_correct[label]))
+					running_total[label] += len(correct[i])
+					# print("running_total_correct: {}".format(running_total_correct[label]))
+					# print("running_total_samples: {}".format(running_total[label]))
 
 		class_dict = load_class_dict(path)		
-		print("Per Class Accuracy:")
+		print("Segmentation Per Class Accuracy:")
 		print("-------------------------")
 		for i, (correct, samples) in enumerate(zip(running_total_correct, running_total)):
 			print("{0:>10}: {1:2.2f}".format(class_dict[i], 100*correct/samples))

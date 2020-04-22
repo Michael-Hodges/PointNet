@@ -87,6 +87,7 @@ class ShapeNetSegment(data.Dataset):
 			self.labelfiles = os.path.join(self.path, 'val_label')
 		if train_val_test == 'test':
 			print("No test labels provided")
+			self.pointfiles = os.path.join(self.path, 'test_data')
 		self.source = []
 		self.label = {}
 		with open(self.classfile, 'r') as f:
@@ -115,7 +116,8 @@ class ShapeNetSegment(data.Dataset):
 		pts = pts[points_sel, :]
 		label = label[points_sel]-1
 		label = torch.from_numpy(label)
-		return pts, label
+		item_class = torch.from_numpy(np.array([self.label[self.classes[c_class]]]))
+		return pts, label, item_class
 
 	def __len__(self):
 		return len(self.data_paths)
