@@ -54,14 +54,14 @@ class ShapeNetClassify(data.Dataset):
 		self.data_paths = []
 		for i in self.points:
 			for k in os.listdir(i):
-				self.data_paths.append(os.path.join(i,k)) # datapaths contain path to each point
+				self.data_paths.append(os.path.join(i, k)) # datapaths contain path to each point
 
 
 	def __getitem__(self, index):
-		_,trn_tst, cat, pt = self.data_paths[index].strip().split('/') # splitting datapath to get
-		pts = np.loadtxt(self.data_paths[index], dtype=np.float32) # loads points as float32
-		points_sel = np.random.choice(range(0,len(pts)-1), size=2000, replace=True) # All batches need to have same number of points. This will sample from all the points uniformly and keep them all equal size
-		pts = pts[points_sel,:]
+		cat = self.data_paths[index].strip().split('/')[-2]  # splitting datapath to get
+		pts = np.loadtxt(self.data_paths[index], dtype=np.float32)  # loads points as float32
+		points_sel = np.random.choice(range(0,len(pts)-1), size=2000, replace=True)  # All batches need to have same number of points. This will sample from all the points uniformly and keep them all equal size
+		pts = pts[points_sel, :]
 		pts = torch.from_numpy(pts)
 		item_class = torch.from_numpy(np.array([self.label[self.classes[cat]]]))
 		# print("from data_loader: {}".format(item_class.item()))

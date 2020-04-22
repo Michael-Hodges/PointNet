@@ -17,17 +17,17 @@ EPOCHS = 10
 
 def train(data_path, act):
 
-	if act=="classify":
+	if act == "classify":
 		classifier = model.Vanilla_Classify_Net(output_dim=16)
 		classifier.to(DEVICE)
 		train_data = dataloading.ShapeNetClassify(data_path, 'train')
-		train_loader = data.DataLoader(dataset=train_data, batch_size=64, shuffle=True,
+		train_loader = data.DataLoader(dataset=train_data, batch_size=8, shuffle=True,
 			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
 			pin_memory=True, drop_last=True, timeout=0,
 			worker_init_fn=None)
 
 		val_data = dataloading.ShapeNetClassify(data_path, 'val')
-		val_loader = data.DataLoader(dataset=val_data, batch_size=64, shuffle=True,
+		val_loader = data.DataLoader(dataset=val_data, batch_size=8, shuffle=True,
 			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
 			pin_memory=True, drop_last=True, timeout=0,
 			worker_init_fn=None)
@@ -46,7 +46,7 @@ def train(data_path, act):
 			total_samples = 0
 			for step, (inputs, labels) in enumerate(train_loader):
 				classifier.train()
-				inputs = inputs.permute(0,2,1)
+				# inputs = inputs.permute(0,2,1)
 				# print("Input Shape: {}".format(inputs.shape))
 				# print("labels: {}".format(labels.shape))
 				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
@@ -71,7 +71,7 @@ def train(data_path, act):
 			with torch.no_grad():
 				for _, (inputs, labels) in enumerate(val_loader):
 					classifier.eval()
-					inputs = inputs.permute(0,2,1)
+					# inputs = inputs.permute(0,2,1)
 					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 					outputs = classifier(inputs)
 					val_loss = loss_func(outputs, labels)
@@ -92,7 +92,7 @@ if __name__== '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dataset', default='shapenet', type=str)
 	parser.add_argument('--action', default='classify', type=str)
-	parser.add_argument('--path', default='ShapeNet', type=str)
+	parser.add_argument('--path', default='../ShapeNet', type=str)
 
 	args = parser.parse_args()
 
