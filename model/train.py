@@ -131,15 +131,17 @@ def train(data_path, act):
 				loss.backward()
 				optimizer.step()
 				t_samps = labels.view(batch_size*point_num, -1).squeeze()
-				# print("tsamps: {}".format(t_samps.shape))
-				running_loss += loss.item()/t_samps
+				# print("tsamps: {}".format(len(t_samps)))
+				running_loss += loss.item()
+				# print("runningloss: {}".format(running_loss))
 				_, predicted = torch.max(outputs.data, 1)
 				# print(labels.shape)
 				# print("labels.size(0): {}".format(labels.size(0)))
-				total_samples += t_samps
+				total_samples += len(t_samps)
 				# print("Total Samples: {}".format(total_samples))
 				total_correct += (predicted == labels).sum().item()
 			train_accuracy = 100 * total_correct / total_samples
+			# print("train_accuracy: {}".format(train_accuracy))
 
 			val_accuracy = 0
 			val_correct = 0
@@ -155,9 +157,9 @@ def train(data_path, act):
 					outputs = classifier(inputs)
 					val_loss = loss_func(outputs, labels)
 					t_samps = labels.view(batch_size*point_num, -1).squeeze()
-					val_running_loss += val_loss.item()/t_samps
+					val_running_loss += val_loss.item()
 					_, predicted = torch.max(outputs.data, 1)
-					val_total += t_samps
+					val_total += len(t_samps)
 					val_correct += (predicted == labels).sum().item()
 			val_accuracy = 100 * val_correct / val_total
 			epoch_delta = val_accuracy - prev_val_accuracy
