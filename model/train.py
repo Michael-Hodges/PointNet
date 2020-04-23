@@ -14,6 +14,7 @@ import dataloading
 
 DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 EPOCHS = 10
+BATCH_SIZE = 8
 
 def train(data_path, act):
 
@@ -21,13 +22,13 @@ def train(data_path, act):
 		classifier = model.Vanilla_Classify_Net(output_dim=16)
 		classifier.to(DEVICE)
 		train_data = dataloading.ShapeNetClassify(data_path, 'train')
-		train_loader = data.DataLoader(dataset=train_data, batch_size=64, shuffle=True,
+		train_loader = data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffle=True,
 			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
 			pin_memory=True, drop_last=True, timeout=0,
 			worker_init_fn=None)
 
 		val_data = dataloading.ShapeNetClassify(data_path, 'val')
-		val_loader = data.DataLoader(dataset=val_data, batch_size=64, shuffle=True,
+		val_loader = data.DataLoader(dataset=val_data, batch_size=BATCH_SIZE, shuffle=True,
 			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
 			pin_memory=True, drop_last=True, timeout=0,
 			worker_init_fn=None)
@@ -92,13 +93,13 @@ def train(data_path, act):
 		classifier = model.Vanilla_Segment_Net(output_dim=6)
 		classifier.to(DEVICE)
 		train_data = dataloading.ShapeNetSegment(data_path, 'train')
-		train_loader = data.DataLoader(dataset=train_data, batch_size=64, shuffle=True,
+		train_loader = data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffle=True,
 			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
 			pin_memory=True, drop_last=True, timeout=0,
 			worker_init_fn=None)
 
 		val_data = dataloading.ShapeNetSegment(data_path, 'val')
-		val_loader = data.DataLoader(dataset=val_data, batch_size=64, shuffle=True,
+		val_loader = data.DataLoader(dataset=val_data, batch_size=BATCH_SIZE, shuffle=True,
 			sampler=None, batch_sampler=None, num_workers=2, collate_fn=None,
 			pin_memory=True, drop_last=True, timeout=0,
 			worker_init_fn=None)
@@ -119,7 +120,7 @@ def train(data_path, act):
 				batch_size = labels.size(0)
 				point_num = labels.size(1)
 				classifier.train()
-				inputs = inputs.permute(0,2,1)
+				# inputs = inputs.permute(0,2,1)
 				# print("Input Shape: {}".format(inputs.shape))
 				# print("labels: {}".format(labels.shape))
 				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
@@ -152,7 +153,7 @@ def train(data_path, act):
 					batch_size = labels.size(0)
 					point_num = labels.size(1)
 					classifier.eval()
-					inputs = inputs.permute(0,2,1)
+					# inputs = inputs.permute(0,2,1)
 					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 					outputs = classifier(inputs)
 					val_loss = loss_func(outputs, labels)
@@ -174,8 +175,8 @@ def train(data_path, act):
 if __name__== '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dataset', default='shapenet', type=str)
-	parser.add_argument('--action', default='classify', type=str) #option classify | segment
-	parser.add_argument('--path', default='../ShapeNet', type=str)
+	parser.add_argument('--action', default='segment', type=str) #option classify | segment
+	parser.add_argument('--path', default='ShapeNet', type=str)
 
 	args = parser.parse_args()
 
