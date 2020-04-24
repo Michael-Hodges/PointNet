@@ -33,6 +33,7 @@ def visualize(point_data, action, *args):
 		v.wait()
 		v.close()
 
+
 def load_model(model_type, model_path):
 	if model_type == 'Vanilla_Classify_Net':
 		classifier = model.Vanilla_Classify_Net(output_dim=16)
@@ -42,14 +43,15 @@ def load_model(model_type, model_path):
 		classifier.load_state_dict(torch.load(model_path, map_location=torch.device(DEVICE)))
 	return classifier
 
+
 def classify(model, point_data, action):
-	model = model
+	model = model.to(DEVICE)
 
 	data_input = np.loadtxt(point_data, dtype=np.float32)
 	if action=='classify':
 		visualize(point_data, action)
 		data_tensor = torch.tensor(data_input, device=DEVICE).unsqueeze(0)
-		data_tensor = data_tensor.permute(0,2,1)
+		# data_tensor = data_tensor.permute(0,2,1)
 		model.eval()
 		with torch.no_grad():
 			output = model(data_tensor)
@@ -60,12 +62,13 @@ def classify(model, point_data, action):
 		print("Model Class: {}".format(class_dict[class_number.item()]))
 	if action == 'segment':
 		data_tensor = torch.tensor(data_input, device=DEVICE).unsqueeze(0)
-		data_tensor = data_tensor.permute(0,2,1)
+		# data_tensor = data_tensor.permute(0,2,1)
 		model.eval()
 		with torch.no_grad():
 			output = model(data_tensor)
 		_, label = torch.max(output[0], dim=0)
 		visualize(point_data, action, label.data.numpy())
+
 
 def load_class_dict(path):
 	class_dict = {}
@@ -79,6 +82,7 @@ def load_class_dict(path):
 			class_dict[i] = line[0]
 	# print(class_dict)
 	return class_dict
+
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()

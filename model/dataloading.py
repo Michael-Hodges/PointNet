@@ -3,6 +3,8 @@ import os.path
 import torch
 import torch.utils.data as data
 import numpy as np
+import provider
+from sklearn.model_selection import train_test_split
 
 
 # data folder should be set up as follows:
@@ -56,13 +58,13 @@ class ShapeNetClassify(data.Dataset):
 		self.data_paths = []
 		for i in self.points:
 			for k in os.listdir(i):
-				self.data_paths.append(os.path.join(i,k)) # datapaths contain path to each point
+				self.data_paths.append(os.path.join(i, k)) # datapaths contain path to each point
 
 	def __getitem__(self, index):
-		_,trn_tst, cat, pt = self.data_paths[index].strip().split('/') # splitting datapath to get
-		pts = np.loadtxt(self.data_paths[index], dtype=np.float32) # loads points as float32
-		points_sel = np.random.choice(range(0,len(pts)-1), size=2000, replace=True) # All batches need to have same number of points. This will sample from all the points uniformly and keep them all equal size
-		pts = pts[points_sel,:]
+		cat = self.data_paths[index].strip().split('/')[-2]  # splitting datapath to get
+		pts = np.loadtxt(self.data_paths[index], dtype=np.float32)  # loads points as float32
+		points_sel = np.random.choice(range(0,len(pts)-1), size=2000, replace=True)  # All batches need to have same number of points. This will sample from all the points uniformly and keep them all equal size
+		pts = pts[points_sel, :]
 		pts = torch.from_numpy(pts)
 		item_class = torch.from_numpy(np.array([self.label[self.classes[cat]]]))
 		# print("from data_loader: {}".format(item_class.item()))
@@ -71,6 +73,7 @@ class ShapeNetClassify(data.Dataset):
 
 	def __len__(self):
 		return len(self.data_paths)
+
 
 class ShapeNetSegment(data.Dataset):
 	def __init__(self, path, train_val_test):
@@ -121,6 +124,47 @@ class ShapeNetSegment(data.Dataset):
 
 	def __len__(self):
 		return len(self.data_paths)
+
+
+class ShapeNetSemantic(data.Dataset):
+	def __init__(self, train_test):
+		all_files = provider.getDataFiles('indoor3d_sem_seg_hdf5_data/all_files.txt')
+		room_filelist = [line.rstrip() for line in open('indoor3d_sem_seg_hdf5_data/room_filelist.txt')]
+		self.data = []
+		self.label = []
+		for h5_filename in all_files:
+			data_batch, label_batch = provider.loadDataFile(h5_filename)
+			self.data.append(data_batch)
+			self.label.append(label_batch)
+		self.data = np.concatenate(self.data, 0)
+		self.label = np.concatenate(self.label, 0)
+		print(self.data.shape)
+		print(self.label.shape)
+
+		test_area = 'Area_' + str(6)
+		train_idxs = []
+		test_idxs = []
+		for i, room_name in enumerate(room_filelist):
+			if test_area in room_name:
+				test_idxs.append(i)
+			else:
+				train_idxs.append(i)
+		if train_test == "test":
+			self.data = self.data[test_idxs, ...]
+			self.label = self.label[test_idxs]
+		else:
+			self.data = self.data[train_idxs, ...]
+			self.label = self.label[train_idxs]
+		self.label = torch.tensor(self.label, dtype=torch.long)
+		# print(train_data.shape, train_label.shape)
+		# print(test_data.shape, test_label.shape)
+
+	def __getitem__(self, index):
+		return self.data[index], self.label[index], len(self.data[index])
+
+	def __len__(self):
+		return len(self.data)
+
 
 if __name__ == '__main__':
 	# classify_net = ShapeNetClassify('ShapeNet', 'train')
