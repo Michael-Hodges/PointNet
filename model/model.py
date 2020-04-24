@@ -227,10 +227,9 @@ class Vanilla_Segment_Net(nn.Module):
 		# seg_conv2 [n, 256, points]
 		x = F.relu(self.seg_bn3(self.seg_conv3(x)))
 		# seg_conv3 [n, 128, points]
-		x = F.relu(self.seg_bn4(self.seg_conv4(x)))
-		# seg_conv4 [n, 50, points]
-		x = F.softmax(self.seg_conv5(x), dim = 1)
-		# seg_conv5/output [nxm]
+		x = F.softmax(self.seg_conv4(x), dim = 2)
+		
+		#seg_conv4/output [nxm]
 		return x
 
 
