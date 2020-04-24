@@ -4,6 +4,7 @@ Requirements are as follows:
 - Torch
 - numpy
 - pptk
+- h5py
 
 **Install requirements as follows:**
 ```
