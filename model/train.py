@@ -15,7 +15,7 @@ import dataloading
 
 DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 EPOCHS = 10
-BATCH_SIZE = 8
+BATCH_SIZE = 256
 
 def train(data_path, act):
 
@@ -202,7 +202,7 @@ def train(data_path, act):
 		prev_val_accuracy = 0
 		val_accuracy = 0
 		epoch_delta = -999
-		while (np.abs(epoch_delta) > 0.1) and (epoch < EPOCHS):
+		while (epoch < EPOCHS):
 			running_loss = 0.0
 			train_accuracy = 0.0
 			total_correct = 0
@@ -216,7 +216,6 @@ def train(data_path, act):
 				# print("labels: {}".format(labels.shape))
 				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
 				optimizer.zero_grad()
-
 				outputs = classifier(inputs)
 				# print("Output Shape: {}".format(outputs.shape))
 				loss = loss_func(outputs, labels)
@@ -261,14 +260,14 @@ def train(data_path, act):
 																			 val_running_loss, val_accuracy))
 
 		print("Training terminated. Saving model...")
-		torch.save(classifier.state_dict(), "./model/pn_Segment.pt")
+		torch.save(classifier.state_dict(), "./model/pn_Semantic.pt")
 
 
 
 if __name__== '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dataset', default='shapenet', type=str)
-	parser.add_argument('--action', default='semantic', type=str) #option classify | segment | semantic
+	parser.add_argument('--action', default='classify', type=str) #option classify | segment | semantic
 	parser.add_argument('--path', default='ShapeNet', type=str)
 
 	args = parser.parse_args()

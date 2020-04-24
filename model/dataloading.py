@@ -155,6 +155,7 @@ class ShapeNetSemantic(data.Dataset):
 		else:
 			self.data = self.data[train_idxs, ...]
 			self.label = self.label[train_idxs]
+		self.label = torch.tensor(self.label, dtype=torch.long)
 		# print(train_data.shape, train_label.shape)
 		# print(test_data.shape, test_label.shape)
 

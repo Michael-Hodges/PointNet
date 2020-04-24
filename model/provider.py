@@ -90,7 +90,7 @@ def getDataFiles(list_filename):
 
 
 def load_h5(h5_filename):
-    f = h5py.File(h5_filename)
+    f = h5py.File('/scratch/shukla.ris/EECE7398/PointNet/' + h5_filename)
     data = f['data'][:]
     label = f['label'][:]
     return (data, label)
