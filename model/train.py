@@ -207,9 +207,9 @@ def train(data_path, act):
 			train_accuracy = 0.0
 			total_correct = 0
 			total_samples = 0
-			for step, (inputs, labels) in enumerate(train_loader):
-				batch_size = inputs.size(0)
-				point_num = inputs.size(1)
+			for step, (inputs, labels, length) in enumerate(train_loader):
+				batch_size = length.shape[0]
+				point_num = length[1]
 				classifier.train()
 				# inputs = inputs.permute(0,2,1)
 				# print("Input Shape: {}".format(inputs.shape))

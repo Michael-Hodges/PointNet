@@ -246,7 +246,7 @@ class Segment_Net(nn.Module):
 class SemanticSegmentNet(nn.Module):
 	def __init__(self):
 		super(SemanticSegmentNet, self).__init__()
-		self.conv1 = nn.Conv1d(2000, 64, 1, 1)
+		self.conv1 = nn.Conv1d(9, 64, 1, 1)
 		self.conv2 = nn.Conv1d(64, 64, 1, 1)
 		self.conv3 = nn.Conv1d(64, 128, 1, 1)
 		self.conv4 = nn.Conv1d(128, 1024, 1, 1)
@@ -270,7 +270,7 @@ class SemanticSegmentNet(nn.Module):
 		batch_size = x.shape[0]
 		num_point = x.shape[1]
 
-		x = x.view(batch_size, 3, -1)
+		x = x.view(batch_size, 9, -1)
 
 		x = F.relu(self.bn1(self.conv1(x)))
 		x = F.relu(self.bn1(self.conv2(x)))

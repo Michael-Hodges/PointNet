@@ -130,18 +130,18 @@ class ShapeNetSemantic(data.Dataset):
 	def __init__(self, train_test):
 		all_files = provider.getDataFiles('indoor3d_sem_seg_hdf5_data/all_files.txt')
 		room_filelist = [line.rstrip() for line in open('indoor3d_sem_seg_hdf5_data/room_filelist.txt')]
-		data_batch_list = []
-		label_batch_list = []
+		self.data = []
+		self.label = []
 		for h5_filename in all_files:
 			data_batch, label_batch = provider.loadDataFile(h5_filename)
-			data_batch_list.append(data_batch)
-			label_batch_list.append(label_batch)
-		data_batches = np.concatenate(data_batch_list, 0)
-		label_batches = np.concatenate(label_batch_list, 0)
-		print(data_batches.shape)
-		print(label_batches.shape)
+			self.data.append(data_batch)
+			self.label.append(label_batch)
+		self.data = np.concatenate(self.data, 0)
+		self.label = np.concatenate(self.label, 0)
+		print(self.data.shape)
+		print(self.label.shape)
 
-		test_area = 'Area_' + str(FLAGS.test_area)
+		test_area = 'Area_' + str(6)
 		train_idxs = []
 		test_idxs = []
 		for i, room_name in enumerate(room_filelist):
@@ -150,16 +150,16 @@ class ShapeNetSemantic(data.Dataset):
 			else:
 				train_idxs.append(i)
 		if train_test == "test":
-			self.data = data_batches[test_idxs, ...]
-			self.label = label_batches[test_idxs]
+			self.data = self.data[test_idxs, ...]
+			self.label = self.label[test_idxs]
 		else:
-			self.data = data_batches[train_idxs, ...]
-			self.label = label_batches[train_idxs]
+			self.data = self.data[train_idxs, ...]
+			self.label = self.label[train_idxs]
 		# print(train_data.shape, train_label.shape)
 		# print(test_data.shape, test_label.shape)
 
 	def __getitem__(self, index):
-		return self.data[index], self.label[index]
+		return self.data[index], self.label[index], len(self.data[index])
 
 	def __len__(self):
 		return len(self.data)
