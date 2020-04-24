@@ -20,12 +20,14 @@ class Transform(nn.Module):
 		self.transform_batch_norm_2d3 = nn.BatchNorm1d(1024, momentum=0.95)
 		self.transform_batch_norm_2d4 = nn.BatchNorm1d(256, momentum=0.95)
 		self.transform_batch_norm_2d5 = nn.BatchNorm1d(512, momentum=0.95)
-		self.transform_weights = nn.Parameter(torch.zeros([256, 3 * k], dtype=torch.float32))
+		# self.transform_weights = nn.Parameter(torch.zeros([256, 3 * k], dtype=torch.float32))
 		self.transform_bias = nn.Parameter(torch.tensor([1, 0, 0, 0, 1, 0, 0, 0, 1], dtype=torch.float32))
-		self.transform_weights2 = nn.Parameter(torch.zeros([256, k * k], dtype=torch.float32))
+		# self.transform_weights2 = nn.Parameter(torch.zeros([256, k * k], dtype=torch.float32))
 		self.transform_bias2 = nn.Parameter(torch.tensor([k * k], dtype=torch.float32))
 		self.fc1 = nn.Linear(1024, 512)
 		self.fc2 = nn.Linear(512, 256)
+		self.fc3 = nn.Linear(256, 3*k)
+		self.fc4 = nn.Linear(256, k*k)
 
 	def forward(self, point_cloud, batch_size, num_point):
 		input_image = point_cloud.view(batch_size, self.K, num_point)
@@ -43,15 +45,15 @@ class Transform(nn.Module):
 		net = F.relu(self.transform_batch_norm_2d4(self.fc2(net)))
 		if self.type == "input":
 			assert (self.K == 3)
-			transform = torch.matmul(net, self.transform_weights)
+			transform = self.fc3(net)
 			transform = torch.add(transform, self.transform_bias)
 			transform = transform.view([batch_size, 3, self.K])
 		elif self.type == "feature":
-			transform = torch.matmul(net, self.transform_weights2)
+			transform = self.fc4(net)
 			transform = torch.add(transform, self.transform_bias2)
 			transform = transform.view([batch_size, self.K, self.K])
 		else:
-			transform = torch.matmul(net, self.transform_weights)
+			transform = self.fc3(net)
 			transform = torch.add(transform, self.transform_bias)
 			transform = transform.view([batch_size, 3, self.K])
 		return transform
