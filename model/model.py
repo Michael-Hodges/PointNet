@@ -10,11 +10,11 @@ class Transform(nn.Module):
 		super(Transform, self).__init__()
 		self.type = type
 		self.K = k
-		self.transform_conv1 = nn.Conv1d(3, 64, 1, 1, padding=1)
-		self.transform_conv2 = nn.Conv1d(64, 128, 1, 1, padding=1)
-		self.transform_conv3 = nn.Conv1d(128, 1024, 1, 1, padding=1)
-		self.transform_conv4 = nn.Conv1d(64, 64, 1, 1, padding=1)
-		self.transform_max_pool = nn.MaxPool2d([1024, 1], [2, 2], padding=0)
+		self.transform_conv1 = nn.Conv1d(3, 64, 1, 1)
+		self.transform_conv2 = nn.Conv1d(64, 128, 1, 1)
+		self.transform_conv3 = nn.Conv1d(128, 1024, 1, 1)
+		self.transform_conv4 = nn.Conv1d(64, 64, 1, 1)
+		self.transform_max_pool = nn.MaxPool2d([1024, 1], [2, 2])
 		self.transform_batch_norm_2d1 = nn.BatchNorm1d(64, momentum=0.95)
 		self.transform_batch_norm_2d2 = nn.BatchNorm1d(128, momentum=0.95)
 		self.transform_batch_norm_2d3 = nn.BatchNorm1d(1024, momentum=0.95)
@@ -214,7 +214,7 @@ class Vanilla_Segment_Net(nn.Module):
 		# max size = [batch_size, 1024, 1]
 
 		glob_feat = x.view(batch_size, 1024, 1)
-		glob_feat = glob_feat.repeat(1,1, num_point)
+		glob_feat = glob_feat.repeat(1, 1, num_point)
 		# glob_feat = [batch_size, 1024, 2000]
 
 		#Begin Segmentation network
@@ -241,6 +241,56 @@ class Segment_Net(nn.Module):
 
 	def forward(self, x):
 		print("Segment forward not yet implemented")
+
+
+class SemanticSegmentNet(nn.Module):
+	def __init__(self):
+		super(SemanticSegmentNet, self).__init__()
+		self.conv1 = nn.Conv1d(2000, 64, 1, 1)
+		self.conv2 = nn.Conv1d(64, 64, 1, 1)
+		self.conv3 = nn.Conv1d(64, 128, 1, 1)
+		self.conv4 = nn.Conv1d(128, 1024, 1, 1)
+		self.conv5 = nn.Conv1d(1024, 512, 1, 1)
+		self.conv6 = nn.Conv1d(512, 256, 1, 1)
+		self.conv7 = nn.Conv1d(256, 13, 1, 1)
+
+		self.fc1 = nn.Linear(1024, 256)
+		self.fc2 = nn.Linear(256, 128)
+
+		self.bn1 = nn.BatchNorm1d(64)
+		self.bn2 = nn.BatchNorm1d(128)
+		self.bn3 = nn.BatchNorm1d(1024)
+		self.bn4 = nn.BatchNorm1d(512)
+		self.bn5 = nn.BatchNorm1d(256)
+		self.bn6 = nn.BatchNorm1d(13)
+
+		self.dropout = nn.Dropout(p=0.3)
+
+	def forward(self, x):
+		batch_size = x.shape[0]
+		num_point = x.shape[1]
+
+		x = x.view(batch_size, 3, -1)
+
+		x = F.relu(self.bn1(self.conv1(x)))
+		x = F.relu(self.bn1(self.conv2(x)))
+		x = F.relu(self.bn1(self.conv2(x)))
+		x = F.relu(self.bn2(self.conv3(x)))
+		x = F.relu(self.bn3(self.conv4(x)))
+
+		pc_feat, _ = torch.max(x, 2, keepdim=True)
+		pc_feat = pc_feat.view(batch_size, -1)
+		pc_feat = F.relu(self.bn5(self.fc1(pc_feat)))
+		pc_feat = F.relu(self.bn2(self.fc2(pc_feat)))
+
+		pc_feat_expand = pc_feat.view(batch_size, 1024, 1)
+		pc_feat_expand = pc_feat_expand.repeat(1, 1, num_point)
+		pc_feat_concat = torch.cat((pc_feat, pc_feat_expand), dim=1)
+
+		x = F.relu(self.bn4(self.conv5(pc_feat_concat)))
+		x = F.relu(self.bn5(self.dropout(self.conv6(x))))
+		x = F.softmax(self.bn6(self.conv7(x)))
+		return x
 
 
 if __name__ == '__main__':

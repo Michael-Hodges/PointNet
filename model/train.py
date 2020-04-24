@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as data
+from torch.utils.data.sampler import SubsetRandomSampler
 
 #
 import numpy as np
@@ -171,11 +172,103 @@ def train(data_path, act):
 		print("Training terminated. Saving model...")
 		torch.save(classifier.state_dict(), "./model/pn_Segment.pt")
 
+	if act == "semantic":
+		classifier = model.SemanticSegmentNet()
+		classifier.to(DEVICE)
+		dataset = dataloading.ShapeNetSemantic("train")
+		validation_split = .2
+		shuffle_dataset = True
+		random_seed = 42
+
+		# Creating data indices for training and validation splits:
+		dataset_size = len(dataset)
+		indices = list(range(dataset_size))
+		split = int(np.floor(validation_split * dataset_size))
+		if shuffle_dataset:
+			np.random.seed(random_seed)
+			np.random.shuffle(indices)
+		train_indices, val_indices = indices[split:], indices[:split]
+
+		# Creating PT data samplers and loaders:
+		train_sampler = SubsetRandomSampler(train_indices)
+		valid_sampler = SubsetRandomSampler(val_indices)
+
+		train_loader = data.DataLoader(dataset=dataset, batch_size=BATCH_SIZE, sampler=train_sampler, num_workers=2)
+		val_loader = data.DataLoader(dataset=dataset, batch_size=BATCH_SIZE, sampler=valid_sampler, num_workers=2)
+		loss_func = nn.CrossEntropyLoss()
+		optimizer = optim.Adam(classifier.parameters(), lr=0.001, weight_decay=0.0)
+		print('{0}, {1}, {2}, {3}, {4}'.format('Epoch', 'Train Loss', 'Train Acc %', 'Test Loss', 'Test Acc %'))
+		epoch = 0
+		prev_val_accuracy = 0
+		val_accuracy = 0
+		epoch_delta = -999
+		while (np.abs(epoch_delta) > 0.1) and (epoch < EPOCHS):
+			running_loss = 0.0
+			train_accuracy = 0.0
+			total_correct = 0
+			total_samples = 0
+			for step, (inputs, labels) in enumerate(train_loader):
+				batch_size = inputs.size(0)
+				point_num = inputs.size(1)
+				classifier.train()
+				# inputs = inputs.permute(0,2,1)
+				# print("Input Shape: {}".format(inputs.shape))
+				# print("labels: {}".format(labels.shape))
+				inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+				optimizer.zero_grad()
+
+				outputs = classifier(inputs)
+				# print("Output Shape: {}".format(outputs.shape))
+				loss = loss_func(outputs, labels)
+				loss.backward()
+				optimizer.step()
+				t_samps = labels.view(batch_size * point_num, -1).squeeze()
+				# print("tsamps: {}".format(len(t_samps)))
+				running_loss += loss.item() / batch_size
+				# print("runningloss: {}".format(running_loss))
+				_, predicted = torch.max(outputs.data, 1)
+				# print(labels.shape)
+				# print("labels.size(0): {}".format(labels.size(0)))
+				total_samples += len(t_samps)
+				# print("Total Samples: {}".format(total_samples))
+				total_correct += (predicted == labels).sum().item()
+			train_accuracy = 100 * total_correct / total_samples
+			# print("train_accuracy: {}".format(train_accuracy))
+
+			val_accuracy = 0
+			val_correct = 0
+			val_total = 0
+			val_running_loss = 0
+			with torch.no_grad():
+				for _, (inputs, labels, _) in enumerate(val_loader):
+					batch_size = labels.size(0)
+					point_num = labels.size(1)
+					classifier.eval()
+					# inputs = inputs.permute(0,2,1)
+					inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+					outputs = classifier(inputs)
+					val_loss = loss_func(outputs, labels)
+					t_samps = labels.view(batch_size * point_num, -1).squeeze()
+					val_running_loss += val_loss.item() / batch_size
+					_, predicted = torch.max(outputs.data, 1)
+					val_total += len(t_samps)
+					val_correct += (predicted == labels).sum().item()
+			val_accuracy = 100 * val_correct / val_total
+			epoch_delta = val_accuracy - prev_val_accuracy
+			prev_val_accuracy = val_accuracy
+			epoch += 1
+			print('{0:5d}, {1:10.3f}, {2:11.3f}, {3:9.3f}, {4:10.3f}'.format(epoch, running_loss, train_accuracy,
+																			 val_running_loss, val_accuracy))
+
+		print("Training terminated. Saving model...")
+		torch.save(classifier.state_dict(), "./model/pn_Segment.pt")
+
+
 
 if __name__== '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dataset', default='shapenet', type=str)
-	parser.add_argument('--action', default='segment', type=str) #option classify | segment
+	parser.add_argument('--action', default='semantic', type=str) #option classify | segment | semantic
 	parser.add_argument('--path', default='ShapeNet', type=str)
 
 	args = parser.parse_args()

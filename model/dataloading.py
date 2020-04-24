@@ -3,6 +3,8 @@ import os.path
 import torch
 import torch.utils.data as data
 import numpy as np
+import provider
+from sklearn.model_selection import train_test_split
 
 
 # data folder should be set up as follows:
@@ -72,6 +74,7 @@ class ShapeNetClassify(data.Dataset):
 	def __len__(self):
 		return len(self.data_paths)
 
+
 class ShapeNetSegment(data.Dataset):
 	def __init__(self, path, train_val_test):
 
@@ -121,6 +124,46 @@ class ShapeNetSegment(data.Dataset):
 
 	def __len__(self):
 		return len(self.data_paths)
+
+
+class ShapeNetSemantic(data.Dataset):
+	def __init__(self, train_test):
+		all_files = provider.getDataFiles('indoor3d_sem_seg_hdf5_data/all_files.txt')
+		room_filelist = [line.rstrip() for line in open('indoor3d_sem_seg_hdf5_data/room_filelist.txt')]
+		data_batch_list = []
+		label_batch_list = []
+		for h5_filename in all_files:
+			data_batch, label_batch = provider.loadDataFile(h5_filename)
+			data_batch_list.append(data_batch)
+			label_batch_list.append(label_batch)
+		data_batches = np.concatenate(data_batch_list, 0)
+		label_batches = np.concatenate(label_batch_list, 0)
+		print(data_batches.shape)
+		print(label_batches.shape)
+
+		test_area = 'Area_' + str(FLAGS.test_area)
+		train_idxs = []
+		test_idxs = []
+		for i, room_name in enumerate(room_filelist):
+			if test_area in room_name:
+				test_idxs.append(i)
+			else:
+				train_idxs.append(i)
+		if train_test == "test":
+			self.data = data_batches[test_idxs, ...]
+			self.label = label_batches[test_idxs]
+		else:
+			self.data = data_batches[train_idxs, ...]
+			self.label = label_batches[train_idxs]
+		# print(train_data.shape, train_label.shape)
+		# print(test_data.shape, test_label.shape)
+
+	def __getitem__(self, index):
+		return self.data[index], self.label[index]
+
+	def __len__(self):
+		return len(self.data)
+
 
 if __name__ == '__main__':
 	# classify_net = ShapeNetClassify('ShapeNet', 'train')
